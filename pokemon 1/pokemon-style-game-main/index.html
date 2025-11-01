@@ -1,0 +1,419 @@
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=768, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pokémon Adventure - Intro</title>
+    <!-- Retro font -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        min-height: 100vh;
+        width: 100vw;
+        min-width: 100vw;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: #182624;
+        font-family: 'Press Start 2P', cursive;
+      }
+      .bg-crossfade {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100vw; height: 100vh;
+        z-index: 0;
+        overflow: hidden;
+      }
+      .bg-image {
+        position: absolute;
+        width: 100vw; height: 100vh;
+        object-fit: cover;
+        left: 0; top: 0; right: 0; bottom: 0;
+        opacity: 0;
+        transition: opacity 1.7s cubic-bezier(.28,.45,.52,1);
+        filter: brightness(1.03) blur(0px) saturate(1.12);
+        z-index: 0;
+        user-select: none;
+        pointer-events: none;
+      }
+      .bg-image.active {
+        opacity: 1;
+        transition: opacity 1.7s cubic-bezier(.28,.45,.52,1);
+      }
+      .overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(31,33,56, 0.23);
+        z-index: 1;
+        pointer-events: none;
+      }
+      .center-content {
+        z-index: 2;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 70vh;
+        margin-top: 6vh;
+      }
+      .game-title {
+        font-family: 'Press Start 2P', cursive;
+        color: #FFE65B;
+        font-size: 2.4em;
+        text-align: center;
+        text-shadow: 2px 2px 10px #192144, 0 0 8px #71c5cf;
+        letter-spacing: 2.5px;
+        margin-bottom: 32px;
+        opacity: 0;
+        animation: fadeInTitle 1.3s ease-out 0.3s forwards;
+      }
+      .button-row {
+        display: flex;
+        flex-direction: column;
+        row-gap: 38px !important;
+        align-items: center;
+        width: 100%;
+        margin-top: 16px;
+      }
+      .intro-btn {
+        font-family: 'Press Start 2P', cursive;
+        font-size: 1.35em;
+        text-transform: uppercase;
+        padding: 22px 45px 22px 45px;
+        border: none;
+        border-radius: 14px;
+        margin: 0 auto;
+        min-width: 270px;
+        margin-bottom: 0;
+        color: #FFF8DB;
+        cursor: pointer;
+        box-shadow: 0 8px 38px rgba(14,26,79,.13), 0 2px 0 #ab2136 inset;
+        letter-spacing: 2px;
+        opacity: 0;
+        transform: translateY(12px);
+        transition: all .17s cubic-bezier(.55,.13,.45,1.24);
+        animation: fadeInButtons 1.17s .9s forwards;
+      }
+      .intro-btn.play {
+        background: #FF3C28;
+        box-shadow: 0 6px 32px #FF3C2888, 0 2px 0 #A72618 inset;
+      }
+      .intro-btn.play:hover {
+        background: #B80F23;
+        color: #fffabc;
+        transform: scale(1.034);
+      }
+      .intro-btn.settings {
+        background: #34a2fd;
+        box-shadow: 0 6px 32px #34a2fd66, 0 2px 0 #0b1673 inset;
+      }
+      .intro-btn.settings:hover {
+        background: #126ee5;
+        color: #dcf1fa;
+        transform: scale(1.034);
+      }
+      .footer-note {
+        font-family: Arial, sans-serif;
+        color: #fffaf5;
+        background: rgba(0,0,0,0.38);
+        position: fixed;
+        bottom: 16px; left: 0; right: 0;
+        width: 100vw;
+        text-align: center;
+        font-size: 1.03em;
+        margin: 0 auto;
+        opacity: 0.98;
+        z-index: 10;
+        letter-spacing: 1.1px;
+        text-shadow: 1px 1px 1px #434370, 0 0 2px #000;
+        user-select: none;
+        pointer-events: none;
+      }
+      .music-btn {
+        position: fixed;
+        top: 20px;
+        right: 22px;
+        z-index: 22;
+        background: rgba(240,245,255,0.87);
+        color: #111;
+        border: 0;
+        border-radius: 50%;
+        font-size: 1.6em;
+        width: 52px;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 14px 0 #1a267628;
+        cursor: pointer;
+        transition: background 0.17s, color 0.17s, transform 0.14s;
+      }
+      .music-btn.muted {
+        color: #a00;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(8,10,28,0.35);
+        z-index: 22;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-content {
+        background: #232346;
+        color: #fff8da;
+        border-radius: 18px;
+        padding: 36px 32px;
+        font-family: 'Press Start 2P', cursive;
+        box-shadow: 0 8px 48px #174dfa33;
+        font-size: 1.23em;
+        letter-spacing: 1px;
+        text-align: center;
+        min-width: 280px;
+        max-width: 90vw;
+        animation: fadeInModal 0.33s .02s backwards;
+      }
+      .modal .close {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        color: #fffaf4;
+        font-size: 2.3em;
+        cursor: pointer;
+        z-index: 1001;
+        transition: color .12s;
+      }
+      .modal .close:hover {
+        color: #FF3C28;
+      }
+      .super-eye-catching {
+        background: #fff;
+        color: #fff;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 2em;
+        font-weight: bold;
+        border: 4px solid #23232b;
+        border-radius: 18px;
+        position: relative;
+        min-width: 335px;
+        min-height: 64px;
+        margin-top: 20px;
+        margin-bottom: 24px;
+        padding: 32px 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        box-shadow: 0 8px #1e1e28, 0 0 0 #0000; /* Only strong bottom shadow */
+        text-shadow: 1px 2px 0 #33393a, 0 0 4px #fffabaaa;
+        letter-spacing: 2.5px;
+        transition: box-shadow 0.13s, color 0.12s, background 0.13s;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .intro-btn.play.super-eye-catching {
+        background: rgba(25, 27, 38, 0.69);
+        color: #ffe65b;
+        border: 3.7px solid #ffe65b;
+        border-radius: 13px;
+        box-shadow: 0 4px 16px #18263850, 0 2px 10px #fff1;
+        font-family: 'Press Start 2P', 'Courier New', monospace;
+        font-size: 1.8em;
+        min-width: 420px;
+        padding: 32px 0 28px 0;
+        letter-spacing: 2.1px;
+        text-align: center;
+        text-shadow: 0 2px 3px #001, 1.5px 0 #fffab240;
+        margin-bottom: 40px;
+        margin-top: 35px;
+        display: block;
+        position: relative;
+        opacity: 1 !important;
+        transition: background 0.22s, border-color 0.18s, color 0.18s, box-shadow 0.17s;
+      }
+      .intro-btn.play.super-eye-catching:hover,
+      .intro-btn.play.super-eye-catching:focus {
+        background: rgba(43, 43, 83, 0.92);
+        color: #fffbe7;
+        border: 3.7px solid #71c5cf;
+        box-shadow: 0 6px 30px #79e7ff33, 0 8px 16px #033a8a22;
+        outline: none;
+      }
+      .intro-btn.play.super-eye-catching .btn-label {
+        font-size: 1.09em;
+        letter-spacing: 0.09em;
+        color: inherit;
+        display: block;
+        text-shadow: 0 1px 2px #0014, 1.2px 0 #0c1a3b13;
+        filter: none;
+      }
+      .super-eye-catching .btn-icon {
+        font-size: 1.4em;
+        text-shadow: 1px 1px 0 #233, 0 0 3px #fff9;
+        margin-right: 10px;
+        filter: brightness(1.1);
+      }
+      .super-eye-catching .btn-shine {
+        content: '';
+        position: absolute;
+        left: 6%;
+        top: 7%;
+        width: 85%;
+        height: 34%;
+        background: linear-gradient(120deg, rgba(255,255,255,.28), rgba(255,255,255,0));
+        border-radius: 80% 40% 16% 50%;
+        pointer-events: none;
+        filter: blur(2.6px);
+        animation: shine-move 2.8s infinite linear;
+      }
+      @keyframes pulsing-glow {
+        0% {
+          box-shadow: 0 0 36px 8px #fff29580, 0 1px 0 #222 inset;
+          filter: brightness(1) drop-shadow(0 0 9px #fff876cc);
+        }
+        100% {
+          box-shadow: 0 0 56px 18px #ffe53f99, 0 1px 0 #361c08 inset;
+          filter: brightness(1.12) drop-shadow(0 0 13px #fff6b5);
+        }
+      }
+      @keyframes shine-move {
+        0% { left: 6%; opacity: 0.7; }
+        29% { left: 70%; opacity: 0.93; }
+        40% { left: 75%; opacity: 0.1; }
+        100% { left: 6%; opacity: 0.7; }
+      }
+      .settings-gear svg .gear-arms {
+        transform-box: fill-box;
+        transform-origin: 50% 50%;
+        animation: gear-spin 3.4s linear infinite;
+      }
+      @keyframes gear-spin {
+        from { transform: rotateZ(0deg); }
+        to { transform: rotateZ(360deg); }
+      }
+      @media (max-width: 600px) {
+        .game-title { font-size: 1.2em; }
+        .intro-btn, .intro-btn.play, .intro-btn.settings { font-size: 1em; padding: 12px 5vw; min-width: 160px; }
+        .super-eye-catching {
+          font-size: 1.01em;
+          padding: 19px 5vw;
+          min-width: 175px;
+          gap: 10px;
+        }
+        .super-eye-catching .btn-icon {
+          font-size: 1.24em;
+        }
+        .center-content { min-height: 55vh; margin-top: 1vh; }
+        .modal-content { font-size: 1em; padding: 22px 8vw; min-width: 120px; }
+      }
+      @keyframes fadeInTitle {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fadeInButtons {
+        from { opacity: 0; transform: translateY(18px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fadeInModal {
+        0% { opacity: 0; transform: scale(0.78); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-crossfade">
+      <img class="bg-image active" src="./img/Pellet Town.png" alt="Pellet Town" draggable="false" />
+      <img class="bg-image" src="./img/battleBackground.png" alt="Battle Background" draggable="false" />
+    </div>
+    <div class="overlay"></div>
+    <div class="center-content">
+      <div class="game-title">Pokémon Adventure Quest of Legend</div>
+      <div class="button-row">
+        <button class="intro-btn play super-eye-catching" id="playGameBtn">
+          <span class="btn-label">START GAME</span>
+        </button>
+      </div>
+    </div>
+    <button class="music-btn" id="musicBtn" title="Toggle music">
+      <span id="musicIcon">🔊</span>
+    </button>
+
+    <div class="modal" id="settingsModal">
+      <div class="modal-content">
+        Settings coming soon!
+      </div>
+      <span class="close" id="closeModal">×</span>
+    </div>
+
+    <audio id="bgMusic" src="./audio/map.wav" loop preload="auto"></audio>
+    <script>
+      // Responsive crossfade backgrounds
+      const bgImages = Array.from(document.querySelectorAll('.bg-image'));
+      let curr = 0;
+      function showBG(n) {
+        bgImages.forEach((img, i) => img.classList.toggle('active', i === n));
+      }
+      setInterval(() => {
+        curr = (curr + 1) % bgImages.length;
+        showBG(curr);
+      }, 5400); // 5.4s per background
+
+      // Game button actions
+      function startGame() {
+        window.location.href = 'game.html';
+      }
+      document.getElementById('playGameBtn').onclick = startGame;
+      // Add key listener for Enter
+      window.addEventListener('keydown', function(e) {
+        if ((e.key === 'Enter' || e.keyCode === 13) && document.getElementById('settingsModal').style.display !== 'flex') {
+          startGame();
+        }
+      });
+
+      // Music autoplay & mute toggle
+      const audio = document.getElementById('bgMusic');
+      const musicBtn = document.getElementById('musicBtn');
+      const musicIcon = document.getElementById('musicIcon');
+      let musicMuted = false;
+      function updateMusicIcon() {
+        musicIcon.textContent = musicMuted ? '🔇' : '🔊';
+        musicBtn.classList.toggle('muted', musicMuted);
+      }
+      // Attempt (user gesture is required sometimes by browsers)
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          audio.volume = 0.6;
+          audio.play().catch(()=>{});
+        }, 400);
+      });
+      musicBtn.onclick = () => {
+        musicMuted = !musicMuted;
+        audio.muted = musicMuted;
+        updateMusicIcon();
+      };
+      updateMusicIcon();
+
+      // Keyboard accessibility for modal
+      window.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+          document.getElementById('settingsModal').style.display = 'none';
+        }
+      });
+    </script>
+  </body>
+  </html>
